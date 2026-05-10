@@ -1,128 +1,163 @@
-# Feature Specification: [FEATURE NAME]
+# フィーチャー仕様: [FEATURE NAME]
 
 **Feature Branch**: `[###-feature-name]`  
-**Created**: [DATE]  
-**Status**: Draft  
-**Input**: User description: "$ARGUMENTS"
+**作成日**: [DATE]  
+**ステータス**: Draft  
+**入力**: "$ARGUMENTS"
 
-## User Scenarios & Testing *(mandatory)*
+## 目的と非目的 *(必須)*
 
-<!--
-  IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.
-  Each user story/journey must be INDEPENDENTLY TESTABLE - meaning if you implement just ONE of them,
-  you should still have a viable MVP (Minimum Viable Product) that delivers value.
-  
-  Assign priorities (P1, P2, P3, etc.) to each story, where P1 is the most critical.
-  Think of each story as a standalone slice of functionality that can be:
-  - Developed independently
-  - Tested independently
-  - Deployed independently
-  - Demonstrated to users independently
--->
+### 目的
 
-### User Story 1 - [Brief Title] (Priority: P1)
+- [この feature が解決する課題と提供価値]
 
-[Describe this user journey in plain language]
+### 非目的
 
-**Why this priority**: [Explain the value and why it has this priority level]
+- [明示的に対象外とする範囲]
 
-**Independent Test**: [Describe how this can be tested independently - e.g., "Can be fully tested by [specific action] and delivers [specific value]"]
+## ユーザーシナリオと受け入れ確認 *(必須)*
 
-**Acceptance Scenarios**:
+### ユーザーストーリー 1 - [短いタイトル] (優先度: P1)
 
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-2. **Given** [initial state], **When** [action], **Then** [expected outcome]
+[利用者が得る価値を平易に記述する]
+
+**この優先度の理由**: [最優先にする理由]
+
+**独立確認方法**: [このストーリー単独で価値を検証する方法]
+
+**受け入れシナリオ**:
+
+1. **Given** [前提], **When** [操作], **Then** [期待結果]
+2. **Given** [前提], **When** [操作], **Then** [期待結果]
 
 ---
 
-### User Story 2 - [Brief Title] (Priority: P2)
+### ユーザーストーリー 2 - [短いタイトル] (優先度: P2)
 
-[Describe this user journey in plain language]
+[利用者が得る価値を平易に記述する]
 
-**Why this priority**: [Explain the value and why it has this priority level]
+**この優先度の理由**: [優先度の理由]
 
-**Independent Test**: [Describe how this can be tested independently]
+**独立確認方法**: [このストーリー単独で価値を検証する方法]
 
-**Acceptance Scenarios**:
+**受け入れシナリオ**:
 
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-
----
-
-### User Story 3 - [Brief Title] (Priority: P3)
-
-[Describe this user journey in plain language]
-
-**Why this priority**: [Explain the value and why it has this priority level]
-
-**Independent Test**: [Describe how this can be tested independently]
-
-**Acceptance Scenarios**:
-
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
+1. **Given** [前提], **When** [操作], **Then** [期待結果]
 
 ---
 
-[Add more user stories as needed, each with an assigned priority]
+### ユーザーストーリー 3 - [短いタイトル] (優先度: P3)
 
-### Edge Cases
+[利用者が得る価値を平易に記述する]
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right edge cases.
--->
+**この優先度の理由**: [優先度の理由]
 
-- What happens when [boundary condition]?
-- How does system handle [error scenario]?
+**独立確認方法**: [このストーリー単独で価値を検証する方法]
 
-## Requirements *(mandatory)*
+**受け入れシナリオ**:
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right functional requirements.
--->
+1. **Given** [前提], **When** [操作], **Then** [期待結果]
+
+## 契約と境界 *(必須)*
+
+### 関与する契約
+
+- [イベント、API、メッセージ、外部スキーマ]
+
+### 認可とテナント境界
+
+- tenantId の伝播方法: [記述]
+- 認可入力: [主体、操作、資源、コンテキスト]
+- 評価タイミング: [いつ評価するか]
+- deny 時の挙動: [拒否時の返却と監査]
+
+## 状態と整合性 *(必須)*
+
+### 状態モデルと正源
+
+- 正源となる状態: [記述]
+- 派生先: [記述]
+- 同期方式: [イベント駆動、ポーリング等]
+- 整合性レベル: [最終的整合、一貫性保証など]
+
+### 冪等性戦略
+
+- requestId の採番元: [記述]
+- 重複検知方式: [記述]
+- 再送時の期待挙動: [記述]
+
+## 失敗と回復 *(必須)*
+
+### 失敗分類
+
+- retryable: [例]
+- non-retryable: [例]
+- compensatable: [例]
+- requires-manual-intervention: [例]
+- dead-letter: [例]
+
+### 回復戦略
+
+- リトライ回数、バックオフ、タイムアウト: [記述]
+- 打ち切り条件: [記述]
+- 補償の要否と根拠: [記述]
+- 補償失敗時の扱い: [記述]
+
+## 可観測性と運用 *(必須)*
+
+### 可観測性要件
+
+- 必須ログ項目: [requestId, tenantId など]
+- 必須メトリクス: [成功率、失敗率、DLQ 件数など]
+- 必須トレースと監査イベント: [記述]
+
+### 運用影響と移行計画
+
+- 設定追加や変更: [記述]
+- liveness/readiness/shutdown への影響: [記述]
+- 移行計画または後方互換方針: [記述]
+
+## Requirements *(必須)*
 
 ### Functional Requirements
 
-- **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]  
-- **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
-- **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
-- **FR-005**: System MUST [behavior, e.g., "log all security events"]
+- **FR-001**: システムは [具体的な機能] を提供しなければならない
+- **FR-002**: システムは [具体的な機能] を検証しなければならない
+- **FR-003**: 利用者は [主要な操作] を実行できなければならない
+- **FR-004**: システムは [状態またはデータ要件] を保持しなければならない
+- **FR-005**: システムは [監査または運用要件] を記録しなければならない
 
-*Example of marking unclear requirements:*
+### Key Entities
 
-- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
-- **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
+- **[Entity 1]**: [意味と主要属性]
+- **[Entity 2]**: [意味と関連]
 
-### Key Entities *(include if feature involves data)*
+### Edge Cases
 
-- **[Entity 1]**: [What it represents, key attributes without implementation]
-- **[Entity 2]**: [What it represents, relationships to other entities]
+- [境界条件や異常系]
+- [契約違反や不正メッセージの扱い]
 
-## Success Criteria *(mandatory)*
+## テスト計画 *(必須)*
 
-<!--
-  ACTION REQUIRED: Define measurable success criteria.
-  These must be technology-agnostic and measurable.
--->
+- unit test: [対象]
+- contract test: [対象]
+- replay test または決定性検証: [対象]
+- idempotency test: [対象]
+- failure-path test: [対象]
+- compensation test: [対象]
+- migration test / downgrade consideration: [対象]
+
+## Success Criteria *(必須)*
 
 ### Measurable Outcomes
 
-- **SC-001**: [Measurable metric, e.g., "Users can complete account creation in under 2 minutes"]
-- **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
-- **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
-- **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+- **SC-001**: [利用者または運用視点で測定可能な成果]
+- **SC-002**: [性能または信頼性の測定可能な成果]
+- **SC-003**: [運用負荷や失敗回復に関する測定可能な成果]
+- **SC-004**: [移行や互換性に関する測定可能な成果]
 
 ## Assumptions
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right assumptions based on reasonable defaults
-  chosen when the feature description did not specify certain details.
--->
-
-- [Assumption about target users, e.g., "Users have stable internet connectivity"]
-- [Assumption about scope boundaries, e.g., "Mobile support is out of scope for v1"]
-- [Assumption about data/environment, e.g., "Existing authentication system will be reused"]
-- [Dependency on existing system/service, e.g., "Requires access to the existing user profile API"]
+- [前提条件]
+- [依存する外部要素]
+- [未確定だが合理的に仮定する事項]
