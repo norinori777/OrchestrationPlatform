@@ -156,11 +156,22 @@ Temporal DSL アーティファクトはバージョンと互換性ポリシー�
 
 ## Feature Specification Requirements
 
-すべての feature spec は最低限、目的と非目的、関与する契約、状態モデルと正源、
-冪等性戦略、認可とテナント境界、失敗分類と回復戦略、補償の要否、可観測性要件、
-Temporal DSL アーティファクト（定義、アクティビティ参照、実行時登録手順、
-移行手順）およびランタイム反映手順、テスト計画、運用影響と移行計画を含ま
-なければならない。これらが欠ける spec は計画や実装へ進めてはならない。
+すべての feature spec は、少なくとも次を明示しなければならない。
+
+- 目的と非目的
+- 関与する契約（イベント、API、メッセージ、外部スキーマ）
+- 状態モデルと正源（派生先、同期方式、整合性レベルを含む）
+- 冪等性戦略（requestId の採番元、重複検知、再送時挙動）
+- 認可とテナント境界（tenantId 伝播、認可入力、評価タイミング、deny 時挙動）
+- 失敗分類と回復戦略（retryable / non-retryable / compensatable / requires-manual-intervention / dead-letter）
+- 補償の要否と補償失敗時の扱い
+- 可観測性要件（必須ログ、メトリクス、トレース、監査イベント）
+- Temporal DSL アーティファクト（定義、アクティビティ参照、実行時登録手順、移行手順）
+- ランタイム反映手順（プラットフォーム側デプロイ不要条件、反映単位、検証方法）
+- テスト計画（unit / contract / replay / idempotency / failure-path / compensation / migration）
+- 運用影響と移行計画（設定変更、運用手順、互換性維持方針）
+
+上記の必須項目が欠ける spec は、計画や実装へ進めてはならない。
 
 ## Governance
 
