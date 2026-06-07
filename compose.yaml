@@ -1,0 +1,414 @@
+name: orchestration-platform-dev
+
+x-node-env: &node-env
+  NODE_ENV: development
+  TZ: Asia/Tokyo
+
+x-restart: &restart
+  restart: unless-stopped
+
+x-healthcheck-http: &healthcheck-http
+  interval: 10s
+  timeout: 5s
+  retries: 12
+  start_period: 20s
+
+x-service-base: &service-base
+  <<: *restart
+  networks:
+    - orchestration-net
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    <<: *service-base
+    environment:
+      POSTGRES_DB: orchestration
+      POSTGRES_USER: orchestration
+      POSTGRES_PASSWORD: orchestration
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orchestration -d orchestration"]
+      <<: *healthcheck-http
+
+  temporal:
+    image: temporalio/auto-setup:1.25.1
+    <<: *service-base
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      <<: *node-env
+      DB: postgresql
+      DB_PORT: 5432
+      POSTGRES_SEEDS: postgres
+      POSTGRES_USER: orchestration
+      POSTGRES_PWD: orchestration
+      POSTGRES_DB: orchestration
+      TEMPORAL_CLI_ADDRESS: temporal:7233
+      TEMPORAL_ADDRESS: temporal:7233
+      DYNAMIC_CONFIG_FILE_PATH: /etc/temporal/config/dynamicconfig/development-sql.yaml
+    ports:
+      - "7233:7233"
+    volumes:
+      - temporal-data:/var/lib/temporal
+    healthcheck:
+      test: ["CMD-SHELL", "temporal operator cluster health --address temporal:7233 >/dev/null 2>&1"]
+      <<: *healthcheck-http
+
+  temporal-ui:
+    image: temporalio/ui:2.31.2
+    <<: *service-base
+    depends_on:
+      temporal:
+        condition: service_healthy
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health >/dev/null 2>&1"]
+      <<: *healthcheck-http
+
+  nats:
+    image: nats:2.10.20-alpine
+    <<: *service-base
+    command:
+      - "-js"
+      - "-m"
+      - "8222"
+      - "-p"
+      - "4222"
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    volumes:
+      - nats-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8222/healthz >/dev/null 2>&1"]
+      <<: *healthcheck-http
+
+  opa:
+    image: openpolicyagent/opa:0.68.0
+    <<: *service-base
+    command: ["run", "--server", "--addr=0.0.0.0:8181", "/policies"]
+    ports:
+      - "8181:8181"
+    volumes:
+      - ./policies:/policies:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8181/health >/dev/null 2>&1"]
+      <<: *healthcheck-http
+
+  redis:
+    image: redis:7.4-alpine
+    <<: *service-base
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      <<: *healthcheck-http
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    profiles: ["observability"]
+    <<: *service-base
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    depends_on:
+      orchestration-platform:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/healthy >/dev/null 2>&1"]
+      <<: *healthcheck-http
+
+  vector:
+    image: timberio/vector:0.40.1-alpine
+    profiles: ["observability"]
+    <<: *service-base
+    command: ["--config", "/etc/vector/vector.toml"]
+    volumes:
+      - ./observability/vector.toml:/etc/vector/vector.toml:ro
+      - vector-data:/var/lib/vector
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8686/health >/dev/null 2>&1"]
+      <<: *healthcheck-http
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.58.0
+    profiles: ["observability"]
+    <<: *service-base
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:16686/ >/dev/null 2>&1"]
+      <<: *healthcheck-http
+
+  opa-policy-loader:
+    image: node:22-alpine
+    <<: *service-base
+    depends_on:
+      opa:
+        condition: service_healthy
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    command: ["sh", "-lc", "node scripts/loadPolicy.js"]
+    restart: "no"
+
+  platform-migrate:
+    image: node:22-alpine
+    <<: *service-base
+    depends_on:
+      postgres:
+        condition: service_healthy
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    command: ["sh", "-lc", "npm run prisma:migrate --workspace orchestration-platform"]
+    restart: "no"
+
+  saas-backend-migrate:
+    image: node:22-alpine
+    <<: *service-base
+    depends_on:
+      postgres:
+        condition: service_healthy
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    command: ["sh", "-lc", "npm run prisma:migrate --workspace saas-backend"]
+    restart: "no"
+
+  user-service-migrate:
+    image: node:22-alpine
+    <<: *service-base
+    depends_on:
+      postgres:
+        condition: service_healthy
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    command: ["sh", "-lc", "npm run prisma:migrate --workspace user-service"]
+    restart: "no"
+
+  file-storage-service-migrate:
+    image: node:22-alpine
+    <<: *service-base
+    depends_on:
+      postgres:
+        condition: service_healthy
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    command: ["sh", "-lc", "npm run prisma:migrate --workspace file-storage-service"]
+    restart: "no"
+
+  routing-file-service-migrate:
+    image: node:22-alpine
+    <<: *service-base
+    depends_on:
+      postgres:
+        condition: service_healthy
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    command: ["sh", "-lc", "npm run prisma:migrate --workspace routing-file-service"]
+    restart: "no"
+
+  orchestration-platform:
+    image: node:22-alpine
+    <<: *service-base
+    depends_on:
+      platform-migrate:
+        condition: service_completed_successfully
+      temporal:
+        condition: service_healthy
+      temporal-ui:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      opa:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      opa-policy-loader:
+        condition: service_completed_successfully
+      saas-backend-migrate:
+        condition: service_completed_successfully
+      user-service-migrate:
+        condition: service_completed_successfully
+      file-storage-service-migrate:
+        condition: service_completed_successfully
+      routing-file-service-migrate:
+        condition: service_completed_successfully
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    environment:
+      <<: *node-env
+      TEMPORAL_ADDRESS: temporal:7233
+      NATS_URL: nats://nats:4222
+      OPA_URL: http://opa:8181
+      REDIS_URL: redis://redis:6379
+      POSTGRES_URL: postgresql://orchestration:orchestration@postgres:5432/orchestration
+    command: ["sh", "-lc", "npm run dev --workspace orchestration-platform"]
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/health >/dev/null 2>&1"]
+      <<: *healthcheck-http
+
+  saas-backend:
+    image: node:22-alpine
+    <<: *service-base
+    depends_on:
+      orchestration-platform:
+        condition: service_healthy
+      saas-backend-migrate:
+        condition: service_completed_successfully
+      nats:
+        condition: service_healthy
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    environment:
+      <<: *node-env
+      NATS_URL: nats://nats:4222
+      ORCHESTRATION_CALLBACK_URL: http://orchestration-platform:4000/callback
+      POSTGRES_URL: postgresql://orchestration:orchestration@postgres:5432/orchestration
+    command: ["sh", "-lc", "npm run dev --workspace saas-backend"]
+    ports:
+      - "4005:4005"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4005/health >/dev/null 2>&1"]
+      <<: *healthcheck-http
+
+  saas-frontend:
+    image: node:22-alpine
+    <<: *service-base
+    depends_on:
+      saas-backend:
+        condition: service_healthy
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    environment:
+      <<: *node-env
+      VITE_API_BASE_URL: http://localhost:4005
+    command: ["sh", "-lc", "npm run dev --workspace saas-frontend -- --host 0.0.0.0 --port 5173"]
+    ports:
+      - "5173:5173"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5173 >/dev/null 2>&1"]
+      <<: *healthcheck-http
+
+  user-service:
+    image: node:22-alpine
+    <<: *service-base
+    depends_on:
+      user-service-migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    environment:
+      <<: *node-env
+      POSTGRES_URL: postgresql://orchestration:orchestration@postgres:5432/orchestration
+      PORT: 4002
+    command: ["sh", "-lc", "npm run dev --workspace user-service"]
+    ports:
+      - "4002:4002"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4002/health >/dev/null 2>&1"]
+      <<: *healthcheck-http
+
+  file-storage-service:
+    image: node:22-alpine
+    <<: *service-base
+    depends_on:
+      file-storage-service-migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    environment:
+      <<: *node-env
+      POSTGRES_URL: postgresql://orchestration:orchestration@postgres:5432/orchestration
+      PORT: 4001
+    command: ["sh", "-lc", "npm run dev --workspace file-storage-service"]
+    ports:
+      - "4001:4001"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4001/health >/dev/null 2>&1"]
+      <<: *healthcheck-http
+
+  routing-file-service:
+    image: node:22-alpine
+    <<: *service-base
+    depends_on:
+      routing-file-service-migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    environment:
+      <<: *node-env
+      POSTGRES_URL: postgresql://orchestration:orchestration@postgres:5432/orchestration
+      PORT: 4003
+    command: ["sh", "-lc", "npm run dev --workspace routing-file-service"]
+    ports:
+      - "4003:4003"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4003/health >/dev/null 2>&1"]
+      <<: *healthcheck-http
+
+  mail-service-mock:
+    image: node:22-alpine
+    <<: *service-base
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    environment:
+      <<: *node-env
+      PORT: 4010
+    command: ["sh", "-lc", "npm run dev --workspace mail-service-mock"]
+    ports:
+      - "4010:4010"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4010/health >/dev/null 2>&1"]
+      <<: *healthcheck-http
+
+volumes:
+  postgres-data:
+  temporal-data:
+  nats-data:
+  redis-data:
+  prometheus-data:
+  vector-data:
+
+networks:
+  orchestration-net:
+    name: orchestration-net
