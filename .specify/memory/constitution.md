@@ -10,6 +10,10 @@ Sync Impact Report
 
 # Orchestration Platform Constitution
 
+## base
+
+specify、plan、tasks、implementsの入力、出力は、日本語で対応する。
+
 ## Core Principles
 
 ### I. Workflow Determinism
