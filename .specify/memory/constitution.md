@@ -1,10 +1,10 @@
 <!--
 Sync Impact Report
-- Version change: template -> 1.0.0
-- Modified principles: placeholders -> I. Workflow Determinism; placeholders -> II. Idempotency by Default; placeholders -> III. Saga over Distributed Transaction; placeholders -> IV. Single Source of Truth; placeholders -> V. Contract-First Evolution; added VI. Tenant Isolation and Security; added VII. Policy Enforcement by Default Deny; added VIII. Explicit Failure Semantics; added IX. Observability Is a Feature; added X. Operational Readiness and Fail Fast; added XI. Quality Gates; added XII. Extensibility with Reviewable Definitions
-- Added sections: Platform Scope; Feature Specification Requirements
+- Version change: 1.0.0 -> 1.1.0
+- Modified principles: XII. Extensibility with Reviewable Definitions -> XII. Extensibility with Reviewable Definitions; added XIII. Runtime-Configurable Workflows and Connectors (Temporal DSL)
+- Added sections: Temporal DSL runtime-configurability requirements
 - Removed sections: none
-- Templates requiring updates: ✅ updated .specify/templates/constitution-template.md; ✅ updated .specify/templates/checklist-template.md; ✅ updated .specify/templates/spec-template.md; ✅ updated .specify/templates/plan-template.md; ✅ updated .specify/templates/tasks-template.md
+- Templates requiring updates: ✅ updated .specify/templates/constitution-template.md; ✅ updated .specify/templates/checklist-template.md; ✅ updated .specify/templates/plan-template.md; ✅ updated .specify/templates/spec-template.md; ✅ updated .specify/templates/tasks-template.md
 - Follow-up TODOs: none
 -->
 
@@ -113,6 +113,22 @@ consideration を伴わなければならない。
 を明示しなければならない。実装にしか存在しない暗黙ルールは禁止し、定義の変更
 だけで振る舞いが変わる場合、その差分はレビュー可能でなければならない。
 
+### XIII. Runtime-Configurable Workflows and Connectors (Temporal DSL)
+
+ワークフロー、アクティビティ、コネクタは可能な限り Temporal の DSL（以下
+「Temporal DSL」）や定義ファイルとして管理し、ランタイムで反映できなければ
+ならない。マイクロサービスの追加・変更・削除やワークフローの追加が発生しても、
+プラットフォーム側のデプロイを必要としないことを原則とする。プラットフォームは
+ワークフロー定義をバージョン管理し、実行時に読み込んで切り替え可能でなければ
+ならない。アクティビティは名前とバージョンで参照し、ワーカー側は各マイクロ
+サービスのデプロイや再登録のみで動的に登録・撤回できること。コネクタ設定は
+外部化され、環境差分はランタイム設定で解決できなければならない。DSL 化できない
+特殊処理は明示的なプラグインインターフェース経由で実行し、プラットフォーム
+デプロイを不要にするための安全な拡張ポイントを持たなければならない。すべての
+Temporal DSL アーティファクトはバージョンと互換性ポリシーを持ち、後方互換を
+破る際には移行計画を必須とする。テナント分離、認可、監査、可観測性、冪等性、
+決定性の要件は Temporal DSL 定義にも適用される。
+
 ## Platform Scope
 
 ### Purpose
@@ -128,8 +144,9 @@ consideration を伴わなければならない。
 
 ### Scope
 
-本憲法の対象は、イベント受信、ワークフロー実行、ポリシー評価、状態永続化、
-補償処理、下流サービス連携、可観測性、運用設計、テスト戦略とする。
+本憲法の対象は、イベント受信、ワークフロー実行、Temporal DSL 定義と
+ランタイム登録、ポリシー評価、状態永続化、補償処理、下流サービス連携、
+可観測性、運用設計、テスト戦略とする。
 
 ### Non-Goals
 
@@ -141,8 +158,9 @@ consideration を伴わなければならない。
 
 すべての feature spec は最低限、目的と非目的、関与する契約、状態モデルと正源、
 冪等性戦略、認可とテナント境界、失敗分類と回復戦略、補償の要否、可観測性要件、
-テスト計画、運用影響と移行計画を含まなければならない。これらが欠ける spec は
-計画や実装へ進めてはならない。
+Temporal DSL アーティファクト（定義、アクティビティ参照、実行時登録手順、
+移行手順）およびランタイム反映手順、テスト計画、運用影響と移行計画を含ま
+なければならない。これらが欠ける spec は計画や実装へ進めてはならない。
 
 ## Governance
 
@@ -157,4 +175,4 @@ feature 変更より重く扱い、既存原則を破る提案は例外が必要
 明確化や文言修正は PATCH とする。準拠確認は pull request と設計レビューで
 実施し、Constitution Check を通過できない変更は採用してはならない。
 
-**Version**: 1.0.0 | **Ratified**: 2026-05-11 | **Last Amended**: 2026-05-11
+**Version**: 1.1.0 | **Ratified**: 2026-05-11 | **Last Amended**: 2026-06-07

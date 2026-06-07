@@ -31,6 +31,7 @@
 - Single Source of Truth: 正源、派生先、同期方式、整合性レベルが明記されているか
 - Contract-First Evolution: 契約、スキーマ、バージョン、移行方針が定義されているか
 - Tenant Isolation and Security: tenantId 伝播、認証、認可、監査境界が設計されているか
+- Runtime-Configurable Workflows and Connectors (Temporal DSL): マイクロサービスやワークフローの追加・変更・削除でプラットフォーム側のデプロイが不要になっているか
 - Explicit Failure Semantics: 失敗分類、リトライ、補償、DLQ、手動介入条件が明記されているか
 - Observability Is a Feature: 必須ログ、メトリクス、トレース、監査イベントが定義されているか
 - Operational Readiness and Fail Fast: 設定検証、ヘルスチェック、停止手順、運用手順が準備されているか

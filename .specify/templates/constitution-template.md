@@ -50,6 +50,10 @@
 
 [PRINCIPLE_12_DESCRIPTION]
 
+### [PRINCIPLE_13_NAME]
+
+[PRINCIPLE_13_DESCRIPTION]
+
 ## Platform Scope
 
 ### Purpose

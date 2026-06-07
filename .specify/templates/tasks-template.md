@@ -38,6 +38,7 @@ description: "機能実装用のタスクリストテンプレート"
 - [ ] T007 状態の正源、永続化モデル、派生データ同期の基盤を定義する
 - [ ] T008 失敗分類、リトライ、タイムアウト、DLQ、補償の共通制御を整備する
 - [ ] T009 可観測性と運用 readiness の共通部品を整備する
+- [ ] T010 [P] Temporal DSL の定義、アクティビティ登録、ランタイムルーティングの共通基盤を整備する
 
 **Checkpoint**: Foundation 完了後にユーザーストーリーへ進む
 
@@ -51,19 +52,19 @@ description: "機能実装用のタスクリストテンプレート"
 
 ### Tests for User Story 1
 
-- [ ] T010 [P] [US1] unit test を tests/unit/ に追加する
-- [ ] T011 [P] [US1] contract test を tests/contract/ に追加する
-- [ ] T012 [P] [US1] replay test または決定性検証を tests/integration/ に追加する
-- [ ] T013 [P] [US1] idempotency test と failure-path test を tests/integration/ に追加する
-- [ ] T014 [P] [US1] compensation test を必要に応じて tests/integration/ に追加する
+- [ ] T011 [P] [US1] unit test を tests/unit/ に追加する
+- [ ] T012 [P] [US1] contract test を tests/contract/ に追加する
+- [ ] T013 [P] [US1] replay test または決定性検証を tests/integration/ に追加する
+- [ ] T014 [P] [US1] idempotency test と failure-path test を tests/integration/ に追加する
+- [ ] T015 [P] [US1] compensation test を必要に応じて tests/integration/ に追加する
 
 ### Implementation for User Story 1
 
-- [ ] T015 [P] [US1] ドメインモデルと状態遷移を src/models/ に実装する
-- [ ] T016 [US1] ワークフローまたはアプリケーションサービスを src/services/ に実装する
-- [ ] T017 [US1] 契約準拠の入出力ハンドラを src/ または api/ に実装する
-- [ ] T018 [US1] 可観測性、監査、メトリクスを対象処理へ組み込む
-- [ ] T019 [US1] 運用手順と quickstart の検証手順を更新する
+- [ ] T016 [P] [US1] ドメインモデルと状態遷移を src/models/ に実装する
+- [ ] T017 [US1] ワークフローまたはアプリケーションサービスを src/services/ に実装する
+- [ ] T018 [US1] 契約準拠の入出力ハンドラを src/ または api/ に実装する
+- [ ] T019 [US1] 可観測性、監査、メトリクスを対象処理へ組み込む
+- [ ] T020 [US1] 運用手順と quickstart の検証手順を更新する
 
 ---
 
@@ -75,17 +76,17 @@ description: "機能実装用のタスクリストテンプレート"
 
 ### Tests for User Story 2
 
-- [ ] T020 [P] [US2] unit test を追加する
-- [ ] T021 [P] [US2] contract test を追加する
-- [ ] T022 [P] [US2] replay test または決定性検証を追加する
-- [ ] T023 [P] [US2] idempotency test、failure-path test、必要な compensation test を追加する
+- [ ] T021 [P] [US2] unit test を追加する
+- [ ] T022 [P] [US2] contract test を追加する
+- [ ] T023 [P] [US2] replay test または決定性検証を追加する
+- [ ] T024 [P] [US2] idempotency test、failure-path test、必要な compensation test を追加する
 
 ### Implementation for User Story 2
 
-- [ ] T024 [P] [US2] ドメインモデルまたは契約差分を実装する
-- [ ] T025 [US2] ワークフローまたはサービスを実装する
-- [ ] T026 [US2] 認可、テナント境界、監査を組み込む
-- [ ] T027 [US2] 観測項目、運用手順、移行手順を更新する
+- [ ] T025 [P] [US2] ドメインモデルまたは契約差分を実装する
+- [ ] T026 [US2] ワークフローまたはサービスを実装する
+- [ ] T027 [US2] 認可、テナント境界、監査を組み込む
+- [ ] T028 [US2] 観測項目、運用手順、移行手順を更新する
 
 ---
 
@@ -97,14 +98,14 @@ description: "機能実装用のタスクリストテンプレート"
 
 ### Tests for User Story 3
 
-- [ ] T028 [P] [US3] 必須テスト群を追加する
-- [ ] T029 [P] [US3] 契約または移行互換性の検証を追加する
+- [ ] T029 [P] [US3] 必須テスト群を追加する
+- [ ] T030 [P] [US3] 契約または移行互換性の検証を追加する
 
 ### Implementation for User Story 3
 
-- [ ] T030 [P] [US3] モデルとサービスを実装する
-- [ ] T031 [US3] 補償、DLQ、運用回復経路を実装する
-- [ ] T032 [US3] 可観測性、監査、運用文書を更新する
+- [ ] T031 [P] [US3] モデルとサービスを実装する
+- [ ] T032 [US3] 補償、DLQ、運用回復経路を実装する
+- [ ] T033 [US3] 可観測性、監査、運用文書を更新する
 
 ---
 
@@ -133,6 +134,7 @@ description: "機能実装用のタスクリストテンプレート"
 - 各ストーリーで contract、replay、idempotency、failure-path、compensation、observability を確認する
 - テナント境界、認可、監査、運用 readiness を最後まで残課題にしてはならない
 - 互換性変更がある場合は migration test と downgrade consideration を必ず含める
+- Temporal DSL を採用する場合は、定義のバージョン、アクティビティ登録、ワーカー再登録、ランタイム反映の検証を含める
 
 ### Parallel Opportunities
 
